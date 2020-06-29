@@ -1,0 +1,9 @@
+
+o	java:S120"ZRename this package name to match the regular expression '^[a-z_]+(\.[a-z_][a-z0-9_]*)*$'.(àÄ€ü
+j
+java:S1450"TRemove the "vista" field and declare it as a local variable in the relevant methods.(Â‚—‚
+7
+java:S1116"Remove this empty statement.(Åñ­õþÿÿÿÿ
+?
+java:S1068")Remove this unused "vista" private field.(Â‚—‚
+V	java:S125"<This block of commented-out lines of code should be removed.(Ñ•ÈÈþÿÿÿÿ
