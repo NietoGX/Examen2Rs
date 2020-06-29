@@ -3,9 +3,11 @@ package Vista;
 import Controlador.Controlador;
 import Excepciones.ExcepcionYaExisteReceta;
 import Excepciones.NoExisteReceta;
+import Excepciones.NoExistenRecetas;
 import Modelo.Datos.Dificultad;
 import Modelo.Datos.Receta;
 import Modelo.Datos.Tipo;
+import Modelo.Filtro.*;
 import Modelo.ImplementacionModelo;
 import com.sun.xml.internal.bind.WhiteSpaceProcessor;
 
@@ -25,6 +27,7 @@ import java.util.List;
 public class Vista implements InformaVista,InterrogaVista{
     private ImplementacionModelo modelo;
     private Controlador controlador;
+    private Filtro filtro;
     private JFrame ventana;
     Container contenedor;
     JPanel top=null;
@@ -43,7 +46,7 @@ public class Vista implements InformaVista,InterrogaVista{
     //    JList<Tarea>=null;
     JTable jt=null;
     JTextField nombre=null;
-    JTextField preparacion=null;
+    JTextArea preparacion=null;
     JTextField ingredientes=null;
 
     JRadioButton sopas=null;
@@ -101,7 +104,7 @@ public class Vista implements InformaVista,InterrogaVista{
         VistaInfo();
         ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         ventana.setVisible(true);
-        ventana.setSize(1200,800);
+        ventana.setSize(900,950);
         top.updateUI();
 
         //EN VEZ DE GUARDAR LOS DATOS AL CERRAR LA APLICACIÓN, GUARDO LOS DATOS CADA VEZ QUE SE MODIFICA ALGÚN VALOR EN LAS TAREAS.
@@ -149,9 +152,15 @@ public class Vista implements InformaVista,InterrogaVista{
         ingredientesPanel.setBackground(Color.DARK_GRAY);
         JLabel ingredientesLabel= new JLabel("Ingredientes");
         ingredientesLabel.setForeground(Color.WHITE);
+        ingredientesLabel.setForeground(Color.WHITE);
         ingredientesFiltro=new JTextField(50);
+        filtrar=new JButton("Filtrar");
+        filtrar.setBackground(Color.lightGray);
+        Escuchador listener= new Escuchador();
+        filtrar.addActionListener(listener);
         ingredientesPanel.add(ingredientesLabel);
         ingredientesPanel.add(ingredientesFiltro);
+
 
 
 
@@ -159,8 +168,9 @@ public class Vista implements InformaVista,InterrogaVista{
         dificultadPanel.setLayout(new BoxLayout(dificultadPanel,BoxLayout.Y_AXIS));
         ingredientesPanel.setLayout(new BoxLayout(ingredientesPanel,BoxLayout.Y_AXIS));
 
-        top.add(dificultadPanel,BorderLayout.NORTH);
+        top.add(dificultadPanel,BorderLayout.WEST);
         top.add(ingredientesPanel,BorderLayout.CENTER);
+        top.add(filtrar,BorderLayout.EAST);
 
         dificultadPanel.updateUI();
         ingredientesPanel.updateUI();
@@ -172,7 +182,6 @@ public class Vista implements InformaVista,InterrogaVista{
 
 
         mid.removeAll();
-
 
         model= new DefaultTableModel();
 
@@ -201,8 +210,9 @@ public class Vista implements InformaVista,InterrogaVista{
                 preparacion.setText(jt.getValueAt(jt.getSelectedRow(), 3).toString());
                 String ings="";
                 for(String t: (List<String>)jt.getValueAt(jt.getSelectedRow(), 4))
-                    ings+=t.trim();
-                ingredientes.setText(ings);
+                    ings+=t.trim()+",";
+
+                ingredientes.setText(ings.substring(0,ings.length()-1));
 
 
                 if((jt.getValueAt(jt.getSelectedRow(), 1)).equals(Tipo.Sopas)){
@@ -234,15 +244,15 @@ public class Vista implements InformaVista,InterrogaVista{
 
             }
         });
-//        jt.getColumnModel().getColumn(3).setMaxWidth(0);
-//        jt.getColumnModel().getColumn(3).setMinWidth(0);
-//        jt.getColumnModel().getColumn(3).setPreferredWidth(0);
-//        jt.getColumnModel().getColumn(3).setResizable(false);
-//
-//        jt.getColumnModel().getColumn(4).setMaxWidth(0);
-//        jt.getColumnModel().getColumn(4).setMinWidth(0);
-//        jt.getColumnModel().getColumn(4).setPreferredWidth(0);
-//        jt.getColumnModel().getColumn(4).setResizable(false);
+        jt.getColumnModel().getColumn(3).setMaxWidth(0);
+        jt.getColumnModel().getColumn(3).setMinWidth(0);
+        jt.getColumnModel().getColumn(3).setPreferredWidth(0);
+        jt.getColumnModel().getColumn(3).setResizable(false);
+
+        jt.getColumnModel().getColumn(4).setMaxWidth(0);
+        jt.getColumnModel().getColumn(4).setMinWidth(0);
+        jt.getColumnModel().getColumn(4).setPreferredWidth(0);
+        jt.getColumnModel().getColumn(4).setResizable(false);
 
 //        jt.setPreferredSize(false);
 //        jt.setBounds(5,5,100,50);
@@ -269,14 +279,22 @@ public class Vista implements InformaVista,InterrogaVista{
 
 
         JPanel ingredientesInfoPanel= new JPanel();
+        ingredientesInfoPanel.setBackground(Color.DARK_GRAY);
+        ingredientesInfoPanel.setForeground(Color.WHITE);
         JLabel ingredientesLabelInfo= new JLabel("Ingredientes: ");
+        ingredientesLabelInfo.setForeground(Color.WHITE);
         ingredientes= new JTextField(50);
         ingredientesInfoPanel.add(ingredientesLabelInfo);
         ingredientesInfoPanel.add(ingredientes);
 
         JPanel preparacionPanel= new JPanel();
         preparacionPanel.setBackground(Color.DARK_GRAY);
-        preparacion=new JTextField(80);
+        preparacion=new JTextArea(10,40);
+        preparacion.setEditable(true);
+        JScrollPane scroll= new JScrollPane(preparacion);
+        scroll.setVerticalScrollBarPolicy ( ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS );
+        scroll.setHorizontalScrollBarPolicy ( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS );
+
 //        preparacion.setForeground();
 
 
@@ -286,7 +304,7 @@ public class Vista implements InformaVista,InterrogaVista{
 
         preparacionPanel.add(preparacionLabel);
 
-        preparacionPanel.add(preparacion);
+        preparacionPanel.add(scroll);
 
         JPanel tipoPanel=new JPanel();
         tipoPanel.setBackground(Color.darkGray);
@@ -334,14 +352,16 @@ public class Vista implements InformaVista,InterrogaVista{
         tipoPanel.add(postres);
 
         JPanel dificultadPanel= new JPanel();
+        dificultadPanel.setBackground(Color.DARK_GRAY);
         ButtonGroup prin= new ButtonGroup();
         principiante=new JRadioButton("Principiante");
+        principiante.setSelected(true);
         principiante.setBackground(Color.darkGray);
         principiante.setForeground(Color.white);
         normal=new JRadioButton("Normal");
         normal.setBackground(Color.darkGray);
         normal.setForeground(Color.white);
-        experto=new JRadioButton("Pasta");
+        experto=new JRadioButton("Experto");
         experto.setBackground(Color.darkGray);
         experto.setForeground(Color.white);
         prin.add(principiante);
@@ -399,34 +419,42 @@ public class Vista implements InformaVista,InterrogaVista{
                 System.out.println("QUE PASAS");
                 try {
                     controlador.crearReceta();
+                    actualizaLista();
                     reiniciaTabla();
 
                 } catch (ExcepcionYaExisteReceta excepcionYaExisteReceta) {
-                    excepcionYaExisteReceta.printStackTrace();
+                    JOptionPane.showMessageDialog(ventana, excepcionYaExisteReceta.getMessage());
                 }
             } else if ("ACTUALIZA".equals(texto)) {
                 try {
                     controlador.eliminarReceta();
                 } catch (NoExisteReceta noExisteReceta) {
-                    noExisteReceta.printStackTrace();
+                    JOptionPane.showMessageDialog(ventana, noExisteReceta.getMessage());
 
                 }
                 try {
                     controlador.crearReceta();
-
+                    actualizaLista();
                     reiniciaTabla();
 
                 } catch (ExcepcionYaExisteReceta excepcionYaExisteReceta) {
-                    excepcionYaExisteReceta.printStackTrace();
+                    JOptionPane.showMessageDialog(ventana, excepcionYaExisteReceta.getMessage());
                 }
             } else if ("BORRA".equals(texto)) {
                 try {
                     controlador.eliminarReceta();
-
+                    actualizaLista();
                     reiniciaTabla();
                 } catch (NoExisteReceta noExisteReceta) {
-                    noExisteReceta.printStackTrace();
+                    JOptionPane.showMessageDialog(ventana, noExisteReceta.getMessage());
                 }
+            } else if ("Filtrar".equals(texto)) {
+                try {
+                    filtrar();
+                } catch (NoExistenRecetas noExisteReceta) {
+                    JOptionPane.showMessageDialog(ventana, noExisteReceta.getMessage());
+                }
+                VistaLista();
             }
         }
     }
@@ -450,7 +478,7 @@ public class Vista implements InformaVista,InterrogaVista{
 //
 //    }
 
-    public Receta getReceta() {
+    public Receta getTexto() {
         List<String> ing= Arrays.asList(ingredientes.getText().trim().split(","));
         Receta rece= new Receta(nombre.getText(),preparacion.getText(),ing);
         if(sopas.isSelected()){
@@ -477,14 +505,56 @@ public class Vista implements InformaVista,InterrogaVista{
 
         return rece;
     }
+
+    public void filtrar() throws NoExistenRecetas {
+        actualizaLista();
+        if(principianteFiltro.isSelected()){
+            this.filtro=new FiltroPrincipiante();
+            recetasLista=filtro.filtrar(recetasLista);
+        }else if(normalFiltro.isSelected()){
+            this.filtro=new FiltroNormal();
+            recetasLista=filtro.filtrar(recetasLista);
+        }else if(expertoFiltro.isSelected()){
+            this.filtro=new FiltroExperto();
+            recetasLista=filtro.filtrar(recetasLista);
+        }else if(todosFiltro.isSelected()){
+            actualizaLista();
+            reiniciaTabla();
+            VistaLista();
+        }
+
+        List<String> ing= Arrays.asList(ingredientesFiltro.getText().trim().split(","));
+        if(ing.isEmpty()){
+
+            reiniciaTabla();
+            VistaLista();
+            return;
+        }
+        filtro= new FiltroIngredientes();
+
+        filtro.setIngredientes(ing);
+        try{
+
+        recetasLista=filtro.filtrar(recetasLista);
+
+        } catch (NoExistenRecetas noExisteReceta) {
+            JOptionPane.showMessageDialog(ventana, noExisteReceta.getMessage());
+
+        }
+
+
+        reiniciaTabla();
+        VistaLista();
+
+    }
+
+
+
+
     public void reiniciaTabla(){
         for( int i = model.getRowCount() - 1; i >= 0; i-- ) {
-            System.out.println("BORRADO ");
             model.removeRow(i);
         }
-        System.out.println("ACTUALIZO LISTA ");
-        actualizaLista();
-        System.out.println("EJECUTO VISTA LISTA ");
         VistaLista();
         jt.updateUI();
     }
